@@ -2,6 +2,8 @@
 
 同一オリジンポリシーと CORS の動きを、ブラウザで確かめるデモです。
 
+勉強会で使ったスライドは [slides/cors-handson.pdf](slides/cors-handson.pdf)（PowerPoint 版は [slides/cors-handson.pptx](slides/cors-handson.pptx)）にあります。
+
 | 画面 | URL | 内容 |
 |---|---|---|
 | 正規サイト | http://site.example:3000/mypage.html | ログイン中のユーザーの個人情報。API は `/api/user` |
