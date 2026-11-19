@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>🎁 当選のお知らせ</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+      body { background: #fff7e6; }
+      header { background: linear-gradient(135deg, #ffb400, #ff6a3d); text-align: center; }
+      iframe { width: 100%; height: 260px; border: 3px dashed #999; border-radius: 8px; background: #fff; }
+      .attacks { display: grid; gap: 8px; }
+      .attacks button { text-align: left; background: #3a3a3a; }
+      .attacks button small { display: block; opacity: 0.75; font-size: 13px; }
+      .evil h2 { color: #b00020; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🎉 おめでとうございます！豪華賞品に当選しました 🎉</h1>
+      <p>（ここは攻撃者が用意した罠サイト：<strong id="origin"></strong>）</p>
+    </header>
+
+    <main>
+      <div class="warning" id="wrong-origin">
+        ⚠️ このページは <code>http://attacker.example:3000/trap.html</code> で開いてください。
+        正規サイトと同じオリジンで開くと、攻撃がすべて成功してしまいます。
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h2>罠サイトに埋め込んだ「正規サイトのマイページ」</h2>
+          <p class="note">
+            iframe で <code>http://site.example:3000/mypage.html</code> を表示しています。
+            ログイン中のユーザーには、自分の個人情報が見えています。
+          </p>
+          <iframe name="frm" src="http://site.example:3000/mypage.html"></iframe>
+        </div>
+
+        <div class="card evil">
+          <h2>😈 攻撃者のスクリプト（デモ用に見える化）</h2>
+          <p class="note">どの攻撃も、罠サイトを開いたログイン中のユーザーの個人情報を盗み出そうとします。</p>
+          <div class="attacks">
+            <button id="attack1">攻撃1：iframe で埋め込んだマイページから、個人情報を読み取る<small>frm.document.querySelector("#user_info")</small></button>
+            <button id="attack2">攻撃2：正規サイトの API を fetch で呼び、個人情報を取得する<small>fetch(".../api/user")　← 単純リクエスト</small></button>
+            <button id="attack3">攻撃3：X-Token ヘッダを付けて、API から個人情報を取得する<small>fetch(".../api/user", { headers: { "X-Token": ... } })　← プリフライトが必要</small></button>
+            <button id="attack4">攻撃4：no-cors で CORS の確認を避けて、API から個人情報を取得する<small>fetch(".../api/user", { mode: "no-cors", headers: { "X-Token": ... } })</small></button>
+          </div>
+          <div id="log"></div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const API = "http://site.example:3000/api/user";
+      document.querySelector("#origin").textContent = location.origin;
+      if (location.hostname === "site.example") {
+        document.querySelector("#wrong-origin").style.display = "block";
+      }
+
+      // 攻撃の結果を画面に表示する（成功＝盗まれた、失敗＝防がれた）
+      function report(stolen, title, detail, hint) {
+        const div = document.createElement("div");
+        div.className = "result " + (stolen ? "ng" : "ok");
+        const time = new Date().toLocaleTimeString("ja-JP");
+        div.innerHTML = `<div class="title"></div><pre></pre>${hint ? '<div class="hint"></div>' : ""}`;
+        div.querySelector(".title").textContent = `${stolen ? "😱 盗まれた！" : "🛡 防がれた"}　${title}（${time}）`;
+        div.querySelector("pre").textContent = detail;
+        if (hint) div.querySelector(".hint").textContent = "👉 " + hint;
+        document.querySelector("#log").prepend(div);
+      }
+
+      // 攻撃1：iframe の中の DOM を直接読む
+      document.querySelector("#attack1").addEventListener("click", () => {
+        try {
+          const userInfo = frm.document.querySelector("#user_info");
+          report(true, "攻撃1", userInfo.innerText);
+        } catch (e) {
+          report(false, "攻撃1", `${e.name}: ${e.message}`,
+            "画面には表示されているのに、JavaScript からは読めない（同一オリジンポリシー）");
+        }
+      });
+
+      // 攻撃2：単純リクエストで API を叩く
+      document.querySelector("#attack2").addEventListener("click", async () => {
+        try {
+          const res = await fetch(API);
+          report(true, "攻撃2", JSON.stringify(await res.json(), null, 2));
+        } catch (e) {
+          report(false, "攻撃2", `${e.name}: ${e.message}`,
+            "サーバーのログ（ターミナル）を見てください。GET はサーバーに届いて処理されている。ブラウザがレスポンスを捨てただけ");
+        }
+      });
+
+      // 攻撃3：カスタムヘッダ付き（プリフライトが必要）で API を叩く
+      document.querySelector("#attack3").addEventListener("click", async () => {
+        try {
+          const res = await fetch(API, { headers: { "X-Token": "aBcDeF1234567890" } });
+          report(true, "攻撃3", JSON.stringify(await res.json(), null, 2));
+        } catch (e) {
+          report(false, "攻撃3", `${e.name}: ${e.message}`,
+            "サーバーのログ（ターミナル）を見てください。届いたのは OPTIONS（プリフライト）だけ。本番の GET は送られていない");
+        }
+      });
+
+      // 攻撃4：no-cors モードで API を叩く（CORS の確認をせずに送らせる）
+      document.querySelector("#attack4").addEventListener("click", async () => {
+        try {
+          const res = await fetch(API, { mode: "no-cors", headers: { "X-Token": "aBcDeF1234567890" } });
+          const body = await res.text();
+          if (body) {
+            report(true, "攻撃4", body);
+          } else {
+            report(false, "攻撃4", `エラーは出ない。でも res.type: "${res.type}"、res.status: ${res.status}、本文: (空)`,
+              "no-cors ではレスポンスの中身が見えない（opaque）。サーバーのログでは、GET が届いているが X-Token は付いていない（no-cors では捨てられる）");
+          }
+        } catch (e) {
+          report(false, "攻撃4", `${e.name}: ${e.message}`);
+        }
+      });
+    </script>
+  </body>
+</html>

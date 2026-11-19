@@ -1,0 +1,11 @@
+{
+  "name": "cors-handson",
+  "private": true,
+  "description": "勉強会用：同一オリジンポリシーと CORS を攻撃画面で体験するデモ",
+  "scripts": {
+    "start": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.3"
+  }
+}

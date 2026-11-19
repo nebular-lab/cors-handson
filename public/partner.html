@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>連携サービス</title>
+    <link rel="stylesheet" href="/style.css" />
+    <style>
+      body { background: #eef4ff; }
+      header { background: #2f6fde; text-align: center; }
+      main { max-width: 760px; }
+      #load { background: #2f6fde; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🤝 自社の連携サービス</h1>
+      <p>（正規サイトの API を正当に使いたい、自社の別サイト：<strong id="origin"></strong>）</p>
+    </header>
+
+    <main>
+      <div class="warning" id="wrong-origin">
+        ⚠️ このページは <code>http://partner.site.example:3000/partner.html</code> で開いてください。
+      </div>
+      <div class="card">
+        <p>
+          <code>http://site.example:3000/api/user</code> からユーザー情報を取得して表示します。
+          API にはトークン（<code>X-Token</code> ヘッダ）を付けて送ります。
+        </p>
+        <button id="load">マイページの情報を取得する</button>
+        <div id="result"></div>
+      </div>
+    </main>
+
+    <script>
+      const API = "http://site.example:3000/api/user";
+      document.querySelector("#origin").textContent = location.origin;
+      if (location.hostname !== "partner.site.example") {
+        document.querySelector("#wrong-origin").style.display = "block";
+      }
+
+      document.querySelector("#load").addEventListener("click", async () => {
+        const result = document.querySelector("#result");
+        const time = new Date().toLocaleTimeString("ja-JP");
+        result.innerHTML = '<div class="result"><div class="title"></div><pre></pre></div>';
+        const box = result.firstElementChild;
+        try {
+          const res = await fetch(API, { headers: { "X-Token": "aBcDeF1234567890" } });
+          const data = await res.json();
+          box.classList.add("ok");
+          box.querySelector(".title").textContent = `✅ 取得できました（${time}）`;
+          box.querySelector("pre").textContent = JSON.stringify(data, null, 2);
+        } catch (e) {
+          box.classList.add("ng");
+          box.querySelector(".title").textContent = `❌ 取得できません（${time}）`;
+          box.querySelector("pre").textContent = `${e.name}: ${e.message}`;
+        }
+      });
+    </script>
+  </body>
+</html>

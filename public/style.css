@@ -1,0 +1,54 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif;
+  color: #222;
+  background: #f5f5f5;
+  font-size: 16px;
+}
+header {
+  padding: 18px 20px;
+  color: #fff;
+}
+header h1 { margin: 0 0 4px; font-size: 26px; }
+header p { margin: 0; opacity: 0.95; }
+main { max-width: 1280px; margin: 0 auto; padding: 16px; }
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.card h2 { margin: 0 0 10px; font-size: 18px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+.note { color: #666; font-size: 14px; }
+code { background: #f0f0f0; padding: 1px 5px; border-radius: 4px; }
+button {
+  font: inherit;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+  background: #333;
+}
+button:hover { filter: brightness(1.2); }
+pre { margin: 0; white-space: pre-wrap; word-break: break-all; }
+
+/* 結果カード */
+.result { padding: 10px 12px; border-radius: 8px; margin-top: 8px; }
+.result.ok { background: #e6f7ec; border-left: 6px solid #2e9e5b; }
+.result.ng { background: #fdecec; border-left: 6px solid #d93025; }
+.result .title { font-weight: bold; font-size: 17px; }
+.result pre { font-size: 13px; margin-top: 6px; }
+.result .hint { margin-top: 6px; color: #444; font-size: 14px; }
+
+.warning {
+  background: #fff3cd;
+  border: 2px solid #f0ad00;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  display: none;
+}
